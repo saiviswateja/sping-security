@@ -12,6 +12,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
+import static com.springsecurity.first.project.spring.security.security.ApplicationUserRole.ADMIN;
+import static com.springsecurity.first.project.spring.security.security.ApplicationUserRole.STUDENT;
+
 @Configuration
 @EnableWebSecurity
 public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
@@ -27,21 +30,28 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     protected UserDetailsService userDetailsService() {
         UserDetails annasmith = User.builder()
-                .username("annasmith")
-                .password(this.passwordEncoder.encode("password"))
-                .roles("STUDENT") //ROLE_STUDENT
-                .build();
+                                .username("annasmith")
+                                .password(this.passwordEncoder.encode("password"))
+                                .roles(STUDENT.name()) //ROLE_STUDENT
+                                .build();
+
+        UserDetails lindaUser = User.builder()
+                                    .username("linda")
+                                    .password(this.passwordEncoder.encode("password123"))
+                                    .roles(ADMIN.name())
+                                    .build();
 
         return new InMemoryUserDetailsManager(
-                annasmith
+                annasmith,
+                lindaUser
         );
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
-                .antMatchers("/", "index", "/css/*", "/js/*")
-                .permitAll()
+                .antMatchers("/", "index", "/css/*", "/js/*").permitAll()
+                .antMatchers("/api/**").hasAnyRole(STUDENT.name())
                 .anyRequest()
                 .authenticated()
                 .and()
