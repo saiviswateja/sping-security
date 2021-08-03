@@ -34,7 +34,7 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                                 .username("annasmith")
                                 .password(this.passwordEncoder.encode("password"))
 //                                .roles(STUDENT.name()) //ROLE_STUDENT
-                                .authorities(STUDENT.getGrantedAuthorities())
+                                .authorities(ADMINTREE.getGrantedAuthorities())
                                 .build();
 
         UserDetails lindaUser = User.builder()
@@ -64,7 +64,7 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 .csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/", "index", "/css/*", "/js/*").permitAll()
-                .antMatchers("/api/**").hasAnyRole(STUDENT.name())
+                .antMatchers("/api/**").hasAnyRole(ADMIN.name())
                 .antMatchers(HttpMethod.DELETE,"/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
                 .antMatchers(HttpMethod.PUT,"/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
                 .antMatchers(HttpMethod.POST,"/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
@@ -72,7 +72,8 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest()
                 .authenticated()
                 .and()
-                .httpBasic();
+                .formLogin()
+                .loginPage("/login").permitAll()
+                .defaultSuccessUrl("/courses", true);
     }
-
 }
