@@ -13,6 +13,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
+import java.util.concurrent.TimeUnit;
+
 import static com.springsecurity.first.project.spring.security.security.ApplicationUserRole.*;
 import static com.springsecurity.first.project.spring.security.security.ApplicationUserPermission.*;
 
@@ -31,25 +33,25 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     protected UserDetailsService userDetailsService() {
         UserDetails annasmith = User.builder()
-                                .username("annasmith")
-                                .password(this.passwordEncoder.encode("password"))
+                .username("annasmith")
+                .password(this.passwordEncoder.encode("password"))
 //                                .roles(STUDENT.name()) //ROLE_STUDENT
-                                .authorities(ADMINTREE.getGrantedAuthorities())
-                                .build();
+                .authorities(ADMINTREE.getGrantedAuthorities())
+                .build();
 
         UserDetails lindaUser = User.builder()
-                                    .username("linda")
-                                    .password(this.passwordEncoder.encode("password123"))
+                .username("linda")
+                .password(this.passwordEncoder.encode("password123"))
 //                                    .roles(ADMIN.name())
-                                    .authorities(ADMIN.getGrantedAuthorities())
-                                    .build();
+                .authorities(ADMIN.getGrantedAuthorities())
+                .build();
 
         UserDetails tomUser = User.builder()
-                                    .username("tom")
-                                    .password(this.passwordEncoder.encode("password456"))
+                .username("tom")
+                .password(this.passwordEncoder.encode("password456"))
 //                                    .roles(ADMINTREE.name())
-                                    .authorities(ADMINTREE.getGrantedAuthorities())
-                                    .build();
+                .authorities(ADMINTREE.getGrantedAuthorities())
+                .build();
 
         return new InMemoryUserDetailsManager(
                 annasmith,
@@ -65,15 +67,25 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers("/", "index", "/css/*", "/js/*").permitAll()
                 .antMatchers("/api/**").hasAnyRole(ADMIN.name())
-                .antMatchers(HttpMethod.DELETE,"/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
-                .antMatchers(HttpMethod.PUT,"/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
-                .antMatchers(HttpMethod.POST,"/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
-                .antMatchers(HttpMethod.GET,"/management/api/**").hasAnyRole(ADMIN.name(), ADMINTREE.name())
+                .antMatchers(HttpMethod.DELETE, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
+                .antMatchers(HttpMethod.PUT, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
+                .antMatchers(HttpMethod.POST, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
+                .antMatchers(HttpMethod.GET, "/management/api/**").hasAnyRole(ADMIN.name(), ADMINTREE.name())
                 .anyRequest()
                 .authenticated()
                 .and()
                 .formLogin()
                 .loginPage("/login").permitAll()
-                .defaultSuccessUrl("/courses", true);
+                .defaultSuccessUrl("/courses", true)
+                .and()
+                .rememberMe().tokenValiditySeconds((int) TimeUnit.DAYS.toSeconds(21))
+                .key("somethingeverysecured")
+                .and()
+                .logout()
+                .logoutUrl("/logout")
+                .clearAuthentication(true)
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID","remember-me")
+                .logoutSuccessUrl("/login");
     }
 }
